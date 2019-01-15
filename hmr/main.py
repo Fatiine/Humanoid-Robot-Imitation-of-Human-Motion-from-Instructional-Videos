@@ -20,7 +20,7 @@ import json
 
 from smpl_to_deepmimic import smpl_to_deepmimic
 
-flags.DEFINE_string('img_dir', "data/dance/", 'Image to run')
+flags.DEFINE_string('img_dir', "data/mj/", 'Image to run')
 flags.DEFINE_string(
     'json_path', None,
     'If specified, uses the openpose output to crop the image.')
@@ -28,7 +28,7 @@ flags.DEFINE_string(
 
 
 
-def visualize(img, proc_param, joints, verts, cam, i):
+def save(img, proc_param, joints, verts, cam, i):
     """
     Renders the result in original image coordinate frame.
     """
@@ -75,7 +75,9 @@ def visualize(img, proc_param, joints, verts, cam, i):
     plt.title('diff vp')
     plt.axis('off')
     plt.draw()
-    name = str(i).join(".png")
+    #plt.show()
+    name = str(i) + ".png"
+    print(name)
     plt.savefig(name)
 
 def preprocess_image(img_path, json_path=None):
@@ -134,17 +136,21 @@ def main(img_dir):
     num_cam = 3
     i = 0
     print(img_dir)
-    onlyfiles = [f for f in os.listdir(img_dir)
+    files = [f for f in os.listdir(img_dir)
                  if os.path.isfile(os.path.join(img_dir, f))]
-    nbr_img = len(onlyfiles)
+    files = sorted(files,
+                   key=lambda f: int(f.rsplit('.')[0].split('_')[-1]))
+
+    nbr_img = len(files)
     print(nbr_img)
     poses = np.zeros((nbr_img,num_features))
     cams = np.zeros((nbr_img, num_cam))
     trans = np.zeros((nbr_img, 3))
     j2d = np.zeros((nbr_img,19,2))
-    proc_params = [{}] * nbr_img
-    for file in onlyfiles:
+    #proc_params = [{}] * nbr_img
+    for file in files:
         img_path = os.path.join(img_dir, file)
+        print(img_path)
 
         input_img, proc_param, img = preprocess_image(img_path)
         # Add batch dimension: 1 x D x D x 3
@@ -155,12 +161,12 @@ def main(img_dir):
         poses[i] = theta[:, num_cam:(num_cam + num_features)]
         j2d[i] = joints
         cams[i] = cam
-        proc_params[i] = proc_param
-        visualize(img, proc_param, joints[0], verts[0], cams[0], i)
+        #proc_params[i] = proc_param
+        save(img, proc_param, joints[0], verts[0], cams[0], i)
         i += 1
 
-    print(proc_param)
-    return poses, cams, j2d, proc_params
+    #print(proc_param)
+    return poses, cams, j2d
         
 
         #p3d(img, joints3d, joints[0], verts[0], cams[0], proc_param, file)
@@ -174,10 +180,10 @@ if __name__ == "__main__":
 
     renderer = vis_util.SMPLRenderer(face_path=config.smpl_face_path)
 
-    img_dir = "data/dance/"
-    poses, cams, j2d, proc_param = main(img_dir)
+    img_dir = "videos/fatine/1/"
+    poses, cams, j2d = main(img_dir)
 
-    d = smpl_to_deepmimic(poses,j2d,cams, proc_param)
-    save_motion(d,"dance2.txt")
+    d = smpl_to_deepmimic(poses,j2d,cams)
+    save_motion(d,"fatine.txt")
 
 

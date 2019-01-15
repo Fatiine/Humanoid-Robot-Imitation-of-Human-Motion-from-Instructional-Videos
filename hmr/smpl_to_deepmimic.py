@@ -18,12 +18,12 @@ def vec_to_angle(v):
     return n
 
 
-def smpl_to_deepmimic(poses, trans, cams, proc_param):
+def smpl_to_deepmimic(poses, trans, cams): #, proc_param):
     num_img = poses.shape[0]
     frames = np.zeros((num_img, 44))
     for i in range(num_img):
         frames[i] = kinematic_tree(poses[i], trans[i],
-                                      cams[i], proc_param[i])
+                                      cams[i])# proc_param[i])
     origin = frames[0, 1:4]
     frames[:, 1:4] = frames[:, 1:4] - origin + np.array([0, 0.9, 0])
     return frames
@@ -64,7 +64,7 @@ def root_position(j2d, cam, proc_param):
     return root_orig
 
 
-def kinematic_tree(poses, j2d, cam, proc_param):
+def kinematic_tree(poses, j2d, cam ) : #, proc_param):
 
     joints = {
         'Pelvis': 0,
@@ -110,7 +110,7 @@ def kinematic_tree(poses, j2d, cam, proc_param):
 
     r = [0.7071, 0, 0.7071, 0]  # # Quaternion that represents 90 degrees around Y
     # qconjugate(r) = [ 0.7071, 0, -0.7071, 0] 
-    motions[1:4] = root_position(j2d, cam, proc_param)
+    motions[1:4] = cam #root_position(j2d, cam, proc_param)
     for joi, num in joints.items():
         x = poses[num]
         # change of basis: SMPL to DeepMimic
